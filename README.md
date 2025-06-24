@@ -77,13 +77,11 @@ Object data types correspond with objects you instantiate. These are complex dat
 
 There are many more built-in object types and you can create your own using [Application Classes](#application-classes).
 
-### Variable Scope and Lifetime
+#### Variable Scope and Lifetime
 
 Variables have a scope and a lifespan. Scope indicates when and where a variable can be accessed.
 
 Peoplesoft has three scopes: `Local`, `Component`, and `Global`.
-
-#### Variable Scope
 
 Scope indicates in what sections of code a variable may be accessed.
 
@@ -339,6 +337,27 @@ Local string &ageMessage;
 
 ```
 
+#### Logic Operators
+
+Logic operators allow you to combine multiple boolean expressions so you may evluate whether code should run based on multiple conditions.
+
+`And` requires both expressions to be True in order to evaluate as True. If either is False, it is False.
+
+`Or` will evaluate to True if either of the expressions are True.
+
+`Not` reverses the value, so True becomes False and False becomes True.
+
+From the [Peoplebooks documentation](https://docs.oracle.com/cd/G10810_01/pt860pbr4/eng/pt/tpcd/Operators-074b1b.html):
+
+| Expression 1 | Operator | Expression 2 | Result |
+|--|--|--|--|
+| False | And | False | False |
+| False | And | True  | False |
+| True  | And | True  | False |
+| False | Or  | False | False |
+| False | Or  | True  | True  |
+| True  | Or  | True  | True  |
+
 #### @ Operator
 
 The `@` operator converts a string to a definition reference. So in case you need to reference a  variable programmatically. For example, you might have a function that is expecting a `Record` object but you might not know which Record it is accessing until runtime.
@@ -360,9 +379,162 @@ SomeFunction(Record.JOB_MIL);
 
 ### Conditional Statements
 
+See: [Logic Operators](#logic-operators)
+
+Conditional statements are used to add logic to your application. There are many cases where you will only want to execute code under certain circumstances.
+
+For example, you might have a different bonus rate depending on the time a person has worked at your company.
+
+#### If Statement
+
+If statements are used to evaluate a conditional and execute code inside it only when it returns True.
+
+```peoplecode
+Local string &emplid = "12345";
+
+Local number &yearsOfService = GetYearsOfServiceByEmplid(&emplid); /* returns the number of years the employee has worked for the company */
+Local number &salary = GetSalaryByEmplid(&emplid); /* returns salary of employee by Employee ID */
+Local number &bonusMultiplier;
+If &yearsOfService >= 5 Then
+  /* If the years of service for the employer is greater than or equal to 5 */
+  &bonusMultiplier = 0.1;
+Else
+  /* Years of service is less than 5 years */
+  &bonusMultiplier = 0.05;
+End-if;
+
+Local number &bonus = &salary * &bonusMultiplier;
+Local number &totalCompensation = &salary + &bonus;
+```
+
+If a person's salary is 100,000/year and they have worked at the company for 7 years, because the years of service is greater than or equal to 5, the bonus multiplier variable would be set to `0.1` and their total compensation would be 110,000.
+
+If the person's years of service was 3, however, the variable would be set to `0.05` and their total compensation would be 105,000.
+
 ### Loops
 
+- [Loop Documentation](https://docs.oracle.com/cd/G10810_01/pt860pbr4/eng/pt/tpcd/Statements-074b4d.html)
+
+Loops are used in programming when you'd like to repeat the same code multiple times. o
+
+#### For Loops
+
+- [For Loop Documentation](https://docs.oracle.com/cd/G10810_01/pt860pbr4/eng/pt/tpcl/PeopleCodeBuilt-inFunctionsAndLanguageConstructs_F.html?pli=ul_d1852e35_tpcl#u761e9afe-0ded-45f1-83ee-e5460d5d6151)
+
+```peoplecode
+/* For Loop Syntax */
+For &count = expression1 to expression2 [Step i]
+  /* statement_list; */
+End-For;
+```
+
+`&count` is a variable that is used to iterate through the for loop. Once everything inside of the loop is executed, it is incremented to the next number. If &count = 1, then the next step of the loop it will become 2, and so on.
+
+`expression1` and `expression2` are integers (whole numbers). They may be numbers or an expression that evaluates to a number like a variable.
+
+`Step i` is by how much an iterator should increment every loop. It is optional, and if excluded, the iterator will increment by 1 each loop.
+
+Let's say that we want to take a number, `&result` that starts at `1` and you want to increment it by `1` `10` times. You can accomplish this without a loop like this:
+
+```peoplecode
+Local number &result = 1;
+&result  = i + 1;
+&result  = i + 1;
+&result  = i + 1;
+&result  = i + 1;
+&result  = i + 1;
+&result  = i + 1;
+&result  = i + 1;
+&result  = i + 1;
+&result  = i + 1;
+&result  = i + 1;
+/* &result = 11 */
+```
+
+A For loop allows you to accomplish like so:
+
+```peoplecode
+Local number &i, &result;
+&result = 1;
+For &i = 1 to 10
+  /* For each row in the set of rows, do something. */
+  &result = &result + 1;
+End-For;
+/* &result = 11 */
+```
+
+Commonly you will iterate through a Rowset object. Rowsets have a length property that may change as you iterate through it. Because of this, you may want to start the loop at the last item and move backwards towards 1.
+
+```peoplecode
+Local number &i;
+Local Rowset &rs;
+For &i = &rs.length to 1 Step -1
+  /* execute code for each row in the rowset. */
+End-For;
+```
+
+You can also step through a for loop by different value. By default it will increment the iterator by 1 each time.
+
+```peoplecode
+For &i = 1 To &rs.length Step 2 
+  /* Assuming a length of 10, the iterator would start at 1,
+  then increment to 3, and then continue until it reaches the
+  length of the rowset. */
+End-For;
+```
+
+#### While Loops
+
+- [While Loop Documentation](https://docs.oracle.com/cd/G10810_01/pt860pbr4/eng/pt/tpcl/PeopleCodeBuilt-inFunctionsAndLanguageConstructs_W-Z.html#u96474e01-a7d3-4646-8609-166f6aa858dc)
+
+While loops will evaluate a logical expression and execute the code inside it until it is no longer True.
+
+You can accomplish something similar to the For Loop from the previous example:
+
+```peoplecode
+Local number &result = 1;
+Local number &i = 1;
+While &i <= 10
+  &result = &result + 1;
+  &i = &i + 1;
+End-While;
+/* &result = 11 */
+```
+
+While for loops require an iterator, while loops can run with any logical expression and will continue to re-run the code as long as it evaluates to True. This means that you must carefully think about your logic so that it does not result in an infinite loop.
+
+```peoplecode
+While True
+  /* This loop will run infinitely */
+End-While;
+
+While False
+  /* This code will never execute */
+End-While;
+```
+
+#### Repeat While Loops
+
+Repeat While loops (more commonly called Do While loops) are the same as while loops, except that you execute the code at least once before checking if the conditions are of the logical expression are True.
+
+```peoplecode
+Repeat
+  /* code that you run once before evaluating the logical expression
+  and continue until the expression evaluates to False */ 
+While expression1;
+```
+
+Even if the While expression is False, it will run at least once:
+
+```peoplecode
+Repeat
+  /* code that will run once and then exit the loop */
+While False;
+```
+
 ### Arrays
+
+Arrays are a collection of values.
 
 ## Peoplesoft Programming Concepts
 
